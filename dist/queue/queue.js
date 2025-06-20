@@ -5,7 +5,6 @@ const wait = require('node:timers/promises').setTimeout;
 class Queue {
     constructor() {
         this.processQueue = async () => {
-            //If the queue is empty, return and stop checking queue status
             if (this.isEmpty()) {
                 this.stopQueue();
                 return;
@@ -19,18 +18,15 @@ class Queue {
                 const interaction = this.queue[interactionId].interaction;
                 const channelId = this.queue[interactionId].interaction.channelId;
                 const channel = await this.queue[interactionId].interaction.client.channels.fetch(channelId);
-                //Check if it's unprocessed
+                
                 if (!processing && currentlyBeingProcessedCount < Queue.CONCURRENT_QUEUE_SIZE) {
                     console.log(`Processing task with interaction id ${interactionId}`);
-                    //Change status to processing
                     this.queue[interactionId].status.processing = true;
-                    //Process the interaction
                     this.processTask(interaction, channel);
                     currentlyBeingProcessedCount++;
                 }
                 else if (!processing && currentlyBeingProcessedCount > Queue.CONCURRENT_QUEUE_SIZE) {
-                    //We want the message to reflect order in the queue
-                    await wait(3000); //Wait to not hit the discord 5/second request limit
+                    await wait(3000); 
                     await interaction.editReply(`There are ${positionInQueue - Queue.CONCURRENT_QUEUE_SIZE}`
                         + ` people ahead of you in the queue. Please wait your turn...`);
                 }
@@ -43,7 +39,6 @@ class Queue {
             const prompt = interaction.options.getString("input");
             const userId = interaction.user.id;
             const userName = interaction.user.displayName;
-            //Log the channel ID and message content to the console
             console.log(`User sent message ${userId} with prompt: ${prompt}`);
             const newThread = await channel.threads.create({
                 name: `[${userName}] - Prompt: ${prompt ?? "Prompt"}`,
@@ -73,11 +68,7 @@ class Queue {
                 let result = "";
                 let responseChunks = [];
                 let messages = [];
-                //We can't exceed Discord rate limits
                 const throttleResponse = async () => {
-                    //Every second send the most updated data
-                    //Bots are limited to 2000 characters
-                    //TODO: split into multiple messages if > 2000 chars.
                     if (messages.length === 0 || messages.length !== responseChunks.length) {
                         const message = await newThread.send(responseChunks[responseChunks.length - 1]);
                         messages.push(message);
@@ -94,7 +85,6 @@ class Queue {
                         return pump();
                         function pump() {
                             return reader?.read().then(async function ({ done, value }) {
-                                // When no more data needs to be consumed, close the stream
                                 if (done) {
                                     console.log(`Task with interaction id ${interaction.id} complete.`);
                                     await wait(2000);
@@ -117,7 +107,6 @@ class Queue {
                                     responseChunks[responseChunks.length - 1] = responseChunks[responseChunks.length - 1].concat(chunk);
                                     result += chunk;
                                 }
-                                // Enqueue the next data chunk into our target stream
                                 controller.enqueue(value);
                                 return pump();
                             });
@@ -128,7 +117,6 @@ class Queue {
                 .catch(async (error) => {
                 console.error('Error:', error);
                 if (error instanceof discord_js_1.DiscordAPIError && error.code === 10008) {
-                    //unknown message error - happens when you send a message in the same thread as bot while processing
                     await newThread.send("WARNING: Sending messages in the same thread as the bot while processing may break the response.");
                 }
                 await interaction.editReply("An error occured. Please try again later.");
@@ -137,7 +125,6 @@ class Queue {
         this.queue = {};
     }
     addItem(interaction) {
-        //How many items are already in the queue?
         const queueLength = this.length();
         this.queue[interaction.id] = {
             interaction: interaction,
@@ -148,7 +135,7 @@ class Queue {
             },
             thread: undefined
         };
-        //If queue is stopped
+        
         if (this.interval === undefined) {
             console.log("Starting the queue processor");
             this.startQueue();
@@ -157,7 +144,7 @@ class Queue {
     removeItem(interactionId) {
         console.log(`Removed ${interactionId} from queue`);
         delete this.queue[interactionId];
-        //Update the positions of the other queue items
+        
         const interactionIds = Object.keys(this.queue);
         for (let i = 0; i < interactionIds.length; i++) {
             this.queue[interactionIds[i]].status.position--;
