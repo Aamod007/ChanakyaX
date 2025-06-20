@@ -8,9 +8,9 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const discord_js_1 = require("discord.js");
 const deployCommands_1 = __importDefault(require("./deploy/deployCommands"));
-// Load environment variables
+
 const BOT_TOKEN = process.env.DISCORD_LLM_BOT_TOKEN;
-// Create an instance of Client and set the intents to listen for messages.
+
 const client = new discord_js_1.Client({
     intents: [
         discord_js_1.GatewayIntentBits.GuildMessageTyping,
@@ -37,9 +37,8 @@ for (const folder of commandFolders) {
         }
     }
 }
-//Register our commands
+
 (0, deployCommands_1.default)();
-// Once the WebSocket is connected, log a message to the console.
 client.once(discord_js_1.Events.ClientReady, () => {
     console.log('Bot is online!');
 });
@@ -64,5 +63,5 @@ client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
         }
     }
 });
-// Log in with the bot's token.
+
 client.login(BOT_TOKEN);
