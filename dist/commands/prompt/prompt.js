@@ -14,7 +14,6 @@ module.exports = {
         .setDescription('The prompt to send')
         .setRequired(true)),
     async execute(interaction) {
-        //We only want this message to show to the user since the thread will be public
         await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
         queue.addItem(interaction);
     }
