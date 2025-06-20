@@ -4,10 +4,8 @@ import fs from "fs";
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 import deployCommands from "./deploy/deployCommands";
 
-// Load environment variables
 const BOT_TOKEN = process.env.DISCORD_LLM_BOT_TOKEN; 
 
-// Create an instance of Client and set the intents to listen for messages.
 const client = new Client({
     intents: [
         GatewayIntentBits.GuildMessageTyping,
@@ -30,7 +28,6 @@ for (const folder of commandFolders) {
 	for (const file of commandFiles) {
 		const filePath = path.join(commandsPath, file);
 		const command = require(filePath);
-		// Set a new item in the Collection with the key as the command name and the value as the exported module
 		if ('data' in command && 'execute' in command) {
 			client.commands.set(command.data.name, command);
 		} else {
@@ -39,10 +36,8 @@ for (const folder of commandFolders) {
 	}
 }
 
-//Register our commands
 deployCommands();
 
-// Once the WebSocket is connected, log a message to the console.
 client.once(Events.ClientReady, () => {
     console.log('Bot is online!');
 });
@@ -68,5 +63,4 @@ client.on(Events.InteractionCreate, async interaction => {
 	}
 });
 
-// Log in with the bot's token.
 client.login(BOT_TOKEN);
